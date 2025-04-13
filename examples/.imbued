@@ -1,0 +1,30 @@
+# Example .imbued configuration file
+
+# Number of child directories down that secrets are available for
+valid_depth = 2
+
+# Type of secret backend to use
+backend_type = "env_file"
+
+# Backend-specific configuration
+[backend_config]
+# Path to the secrets file (relative to this directory)
+file_path = "./secrets/secrets.env"
+
+# Secrets to retrieve
+# Format: secret_name = "environment_variable_name"
+[secrets]
+# Database credentials
+DATABASE_PASSWORD = "DB_PASSWORD"
+DATABASE_USER = "DB_USER"
+
+# API credentials
+API_KEY = "API_KEY"
+API_SECRET = "API_SECRET"
+
+# GitHub credentials
+GITHUB_TOKEN = "GITHUB_TOKEN"
+
+# AWS credentials
+AWS_ACCESS_KEY = "AWS_ACCESS_KEY"
+AWS_SECRET_KEY = "AWS_SECRET_KEY"

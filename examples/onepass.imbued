@@ -1,0 +1,32 @@
+# Example .imbued configuration file for 1Password backend
+
+# Number of child directories down that secrets are available for
+valid_depth = 2
+
+# Type of secret backend to use
+backend_type = "onepass"
+
+# No backend-specific configuration needed here
+# Credentials are stored securely in the macOS Keychain
+# Use the following command to set them:
+# imbued credentials set-onepass --account-token "your-token" --vault-id "your-vault"
+[backend_config]
+
+# Secrets to retrieve
+# Format: secret_name = "environment_variable_name"
+[secrets]
+# The secret_name should match the item name in 1Password
+# Database credentials
+DATABASE_PASSWORD = "DB_PASSWORD"
+DATABASE_USER = "DB_USER"
+
+# API credentials
+API_KEY = "API_KEY"
+API_SECRET = "API_SECRET"
+
+# GitHub credentials
+GITHUB_TOKEN = "GITHUB_TOKEN"
+
+# AWS credentials
+AWS_ACCESS_KEY = "AWS_ACCESS_KEY"
+AWS_SECRET_KEY = "AWS_SECRET_KEY"

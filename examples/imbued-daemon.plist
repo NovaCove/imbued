@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.example.imbued</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/local/bin/imbued</string>
+        <string>--daemon</string>
+        <string>--socket</string>
+        <string>~/.imbued/imbued.sock</string>
+        <string>--log-level</string>
+        <string>debug</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>StandardErrorPath</key>
+    <string>~/.imbued/logs/imbued.log</string>
+    <key>StandardOutPath</key>
+    <string>~/.imbued/logs/imbued.log</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>IMBUED_CONFIG_DIR</key>
+        <string>~/.imbued/config</string>
+    </dict>
+</dict>
+</plist>
