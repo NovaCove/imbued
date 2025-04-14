@@ -11,11 +11,12 @@ Imbued can run in two modes:
 - Automatically injects secrets into environment variables when entering a directory with an `.imbued` configuration file
 - Automatically removes environment variables when exiting the directory
 - Supports multiple secret backends:
-  - Environment file
-  - HashiCorp Vault
+  - MacOS keychain
   - 1Password (see [1Password Backend Documentation](pkg/secrets/onepass_README.md))
+- Plans to add support for:
   - AWS Secret Manager
   - GCP Secret Manager
+  - HashiCorp Vault
 - Authenticates users before allowing access to secrets
 - Tracks all access and authentication requests
 - Supports Bash, Zsh, and Fish shells
@@ -123,11 +124,7 @@ Create a file named `.imbued` in the root directory of your project. Here's an e
 valid_depth = 2
 
 # Type of secret backend to use
-backend_type = "env_file"
-
-# Backend-specific configuration
-[backend_config]
-file_path = "/path/to/secrets.env"
+backend_type = "macos_keychain_manager"
 
 # Secrets to retrieve
 [secrets]
@@ -143,40 +140,18 @@ See `docs/sample.imbued` for a more detailed example.
 Imbued provides a command-line interface for managing secrets:
 
 ```bash
-# Direct mode
-# Show the current configuration
-imbued --show-config
-
-# List available secrets
-imbued --list-secrets
-
-# Get a secret by name
-imbued --get-secret DB_PASSWORD
-
-# Authenticate the current process
-imbued --authenticate
-
-# Check if the current process is authenticated
-imbued --check-auth
-
-# Inject secrets into environment variables
-imbued --inject-env
-
-# Clean environment variables set by imbued
-imbued --clean-env
-
 # Server mode
 # Run in daemon mode as a server
 imbued --daemon --socket ~/.imbued/imbued.sock
 
 # Client mode (communicates with the server)
-imbued --client --socket ~/.imbued/imbued.sock --show-config
-imbued --client --socket ~/.imbued/imbued.sock --list-secrets
-imbued --client --socket ~/.imbued/imbued.sock --get-secret DB_PASSWORD
-imbued --client --socket ~/.imbued/imbued.sock --authenticate
-imbued --client --socket ~/.imbued/imbued.sock --check-auth
-imbued --client --socket ~/.imbued/imbued.sock --inject-env
-imbued --client --socket ~/.imbued/imbued.sock --clean-env
+imbued client show-config
+imbued client list-secrets
+imbued client get-secret DB_PASSWORD
+imbued client authenticate
+imbued client check-auth
+imbued client inject-env
+imbued client clean-env
 ```
 
 ## How it works
