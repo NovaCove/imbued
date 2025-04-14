@@ -56,6 +56,16 @@ func (b *AWSSecretManagerBackend) GetSecret(key string) (string, error) {
 	return fmt.Sprintf("aws-secret-%s", key), nil
 }
 
+func (b *AWSSecretManagerBackend) StoreSecrets(secrets map[string]string) error {
+	if !b.initialized {
+		return fmt.Errorf("aws_secret_manager backend not initialized")
+	}
+
+	// In a real implementation, this would use the AWS Secret Manager client to store the secrets
+	// For now, we'll just return nil
+	return nil
+}
+
 // Close cleans up any resources used by the backend
 func (b *AWSSecretManagerBackend) Close() error {
 	// In a real implementation, this would close the AWS Secret Manager client

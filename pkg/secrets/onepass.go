@@ -138,6 +138,16 @@ func (b *OnePassBackend) GetSecret(key string) (string, error) {
 	return "", fmt.Errorf("password field not found in 1Password item: %s", key)
 }
 
+func (b *OnePassBackend) StoreSecrets(secrets map[string]string) error {
+	if !b.initialized {
+		return fmt.Errorf("onepass backend not initialized")
+	}
+
+	// In a real implementation, this would use the 1Password CLI to store secrets
+	// For now, we'll just return a placeholder
+	return fmt.Errorf("storing secrets in 1Password is not implemented")
+}
+
 // Close cleans up any resources used by the backend
 func (b *OnePassBackend) Close() error {
 	b.initialized = false

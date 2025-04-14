@@ -4,7 +4,7 @@
 valid_depth = 2
 
 # Type of secret backend to use
-backend_type = "env_file"
+backend_type = "macos_keychain_manager"
 
 # Backend-specific configuration
 [backend_config]

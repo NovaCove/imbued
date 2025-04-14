@@ -2,6 +2,7 @@ package secrets
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -58,6 +59,10 @@ func (b *EnvFileBackend) Initialize(config map[string]string) error {
 	}
 
 	return nil
+}
+
+func (b *EnvFileBackend) StoreSecrets(secrets map[string]string) error {
+	return errors.New("we do not support storing secrets in env_file backend")
 }
 
 // GetSecret retrieves a secret by its key

@@ -1,23 +1,23 @@
-#!/bin/bash
+#!/bin/zsh
 
-# Ensure the script is running in Bash
-if [ -z "$BASH_VERSION" ]; then
-    echo "This script must be run in Bash." >&2
+# Ensure the script is running in Zsh
+if [[ -z "$ZSH_VERSION" ]]; then
+    echo "This script must be run in Zsh." >&2
     return 1
 fi
 
-shopt -s extglob
+setopt extended_glob
 
-# imbued.sh - Bash integration for imbued
-# This script should be sourced in your .bashrc or .bash_profile
+# imbued.zsh - Zsh integration for imbued
+# This script should be sourced in your .zshrc
 
 # Path to the imbued binary
 IMBUED_BIN="${IMBUED_BIN:-$(which imbued)}"
 
 # If imbued binary is not found, try to use the one in the same directory as this script
-if [ -z "$IMBUED_BIN" ]; then
-    SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-    if [ -x "$SCRIPT_DIR/../../cmd/imbued/imbued" ]; then
+if [[ -z "$IMBUED_BIN" ]]; then
+    SCRIPT_DIR="$(cd "$(dirname "${(%):-%x}")" &> /dev/null && pwd)"
+    if [[ -x "$SCRIPT_DIR/../../cmd/imbued/imbued" ]]; then
         IMBUED_BIN="$SCRIPT_DIR/../../cmd/imbued/imbued"
     else
         echo "imbued binary not found. Please install it or set IMBUED_BIN environment variable."
@@ -36,14 +36,14 @@ IMBUED_CURRENT_CONFIG=""
 
 # Function to clean environment variables set by imbued
 imbued_clean_env() {
-    if [ -n "$IMBUED_CURRENT_CONFIG" ]; then
+    if [[ -n "$IMBUED_CURRENT_CONFIG" ]]; then
         # Get the list of environment variables to unset
-        local env_vars=$("$IMBUED_BIN" client clean-env --socket "$IMBUED_SOCKET" --config "$IMBUED_CURRENT_CONFIG" )
+        local env_vars="$("$IMBUED_BIN" client clean-env --socket "$IMBUED_SOCKET" --config "$IMBUED_CURRENT_CONFIG")"
         
         # Unset each environment variable
         while read -r line; do
             if [[ "$line" =~ ^unset\ (.+)$ ]]; then
-                local env_name="${BASH_REMATCH[1]}"
+                local env_name="${match[1]}"
                 unset "$env_name"
             fi
         done <<< "$env_vars"
@@ -61,7 +61,7 @@ imbued_set_env() {
     local config_path="$1"
     
     # Check if we need to authenticate
-    if ! "$IMBUED_BIN" client check-auth --socket "$IMBUED_SOCKET" --config "$config_path"  &> /dev/null; then
+    if ! "$IMBUED_BIN" client check-auth --socket "$IMBUED_SOCKET" --config "$config_path" &> /dev/null; then
         echo "Imbued: Authentication required"
         if ! "$IMBUED_BIN" client auth --socket "$IMBUED_SOCKET" --config "$config_path"; then
             echo "Imbued: Authentication failed"
@@ -70,7 +70,7 @@ imbued_set_env() {
     fi
     
     # Get the list of environment variables to set
-    local env_vars=$("$IMBUED_BIN" client inject-env --socket "$IMBUED_SOCKET" --config "$config_path")
+    local env_vars="$("$IMBUED_BIN" client inject-env --socket "$IMBUED_SOCKET" --config "$config_path")"
 
     echo "Imbued: Setting environment variables from $config_path"
     echo "$env_vars"
@@ -83,14 +83,11 @@ imbued_set_env() {
     while IFS= read -r line; do
         echo "Imbued: Processing line: $line"
         # Trim leading and trailing whitespace from the line
-        line=$(echo "$line" | xargs)
+        line="${line## }"
+        line="${line%% }"
         if [[ "$line" =~ ^export\ ([^=]+)=(.+)$ ]]; then
-            echo "Matched ${BASH_REMATCH}"
-            echo "Matched: ${BASH_REMATCH[0]}"
-            echo "Matched: ${BASH_REMATCH[1]}"
-            echo "Matched: ${BASH_REMATCH[2]}"
-            local env_name="${BASH_REMATCH[1]}"
-            local env_value="${BASH_REMATCH[2]}"
+            local env_name="${match[1]}"
+            local env_value="${match[2]}"
             # Remove surrounding quotes from env_value if present
             env_value="${env_value%\"}"
             env_value="${env_value#\"}"
@@ -111,17 +108,17 @@ imbued_set_env() {
 # Function to check for .imbued file and set environment variables
 imbued_check() {
     # Find .imbued file
-    local config_path=$("$IMBUED_BIN" client show-config --socket "$IMBUED_SOCKET" --max-levels "$IMBUED_MAX_LEVELS" 2>/dev/null| grep "Config file:" | cut -d' ' -f3-)
+    local config_path="$("$IMBUED_BIN" client show-config --socket "$IMBUED_SOCKET" --max-levels "$IMBUED_MAX_LEVELS" 2>/dev/null | grep "Config file:" | cut -d' ' -f3-)"
     
     # If no .imbued file found, clean environment variables
-    if [ -z "$config_path" ]; then
+    if [[ -z "$config_path" ]]; then
         echo "Imbued: No .imbued file found"
         imbued_clean_env
         return
     fi
     
     # If the .imbued file is the same as the current one, do nothing
-    if [ "$config_path" = "$IMBUED_CURRENT_CONFIG" ]; then
+    if [[ "$config_path" == "$IMBUED_CURRENT_CONFIG" ]]; then
         echo "Imbued: Already using the current .imbued file"
         return
     fi
@@ -147,7 +144,7 @@ imbued_cd() {
 # Function to ensure the imbued server is running
 imbued_ensure_server() {
     # Check if the socket exists and is a socket
-    if [ ! -S "$IMBUED_SOCKET" ]; then
+    if [[ ! -S "$IMBUED_SOCKET" ]]; then
         echo "Imbued: Starting server..."
         # Start the server in the background
         nohup "$IMBUED_BIN" server start --socket "$IMBUED_SOCKET" > /dev/null 2>&1 &

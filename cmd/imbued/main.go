@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -27,6 +28,7 @@ type Command struct {
 	MaxLevels   int               `json:"max_levels,omitempty"`
 	CurrentDir  string            `json:"current_dir,omitempty"`
 	Environment map[string]string `json:"environment,omitempty"`
+	BackendType string            `json:"backend_type,omitempty"`
 }
 
 // Response represents a response sent from server to client
@@ -101,6 +103,14 @@ func handleConnection(conn net.Conn, tracker tracking.Tracker, authenticator aut
 		return
 	}
 
+	stringifiedCmd, err := json.MarshalIndent(cmd, "", "  ")
+	if err != nil {
+		log.Printf("Failed to stringify command: %v", err)
+		sendResponse(conn, Response{Success: false, Error: fmt.Sprintf("Failed to stringify command: %v", err)})
+		return
+	}
+	log.Default().Printf("Received command: %s\n", stringifiedCmd)
+
 	// Process command
 	switch cmd.Action {
 	case "check_auth":
@@ -119,6 +129,8 @@ func handleConnection(conn net.Conn, tracker tracking.Tracker, authenticator aut
 		handleShowConfig(conn, cmd)
 	case "find_config":
 		handleFindConfig(conn, cmd)
+	case "store_secrets":
+		handleStoreSecrets(conn, cmd, tracker, authenticator)
 	default:
 		sendResponse(conn, Response{Success: false, Error: fmt.Sprintf("Unknown action: %s", cmd.Action)})
 	}
@@ -237,6 +249,50 @@ func handleGetSecret(conn net.Conn, cmd Command, tracker tracking.Tracker, authe
 			"value":    secretValue,
 		},
 	})
+}
+
+func handleStoreSecrets(conn net.Conn, cmd Command, tracker tracking.Tracker, authenticator auth.Authenticator) {
+	// Load config
+	log.Default().Printf("Loading config from %q", cmd.ConfigPath)
+	cfg, err := config.LoadConfig(cmd.ConfigPath)
+	if err != nil {
+		sendResponse(conn, Response{Success: false, Error: fmt.Sprintf("Failed to load config: %v", err)})
+		return
+	}
+
+	// Check if authenticated
+	log.Default().Printf("Checking authentication for process ID %q", cmd.ProcessID)
+	if !authenticator.IsAuthenticated(cmd.ProcessID) {
+		sendResponse(conn, Response{Success: false, Error: "Process is not authenticated"})
+		return
+	}
+
+	// Track secret access
+	if err := tracker.TrackSecretAccess(cmd.ProcessID, []string{cmd.SecretName}); err != nil {
+		log.Printf("Failed to track secret access: %v", err)
+	}
+
+	// Initialize secret backend
+	backend, err := secrets.NewBackend(cfg.BackendType)
+	if err != nil {
+		sendResponse(conn, Response{Success: false, Error: fmt.Sprintf("Failed to create secret backend: %v", err)})
+		return
+	}
+
+	if err := backend.Initialize(cfg.BackendConfig); err != nil {
+		sendResponse(conn, Response{Success: false, Error: fmt.Sprintf("Failed to initialize secret backend: %v", err)})
+		return
+	}
+	defer backend.Close()
+
+	// Store the secrets
+	err = backend.StoreSecrets(cmd.Environment)
+	if err != nil {
+		sendResponse(conn, Response{Success: false, Error: fmt.Sprintf("Failed to store secrets: %v", err)})
+		return
+	}
+
+	sendResponse(conn, Response{Success: true})
 }
 
 // handleListSecrets handles the list_secrets command
@@ -968,6 +1024,90 @@ func main() {
 		},
 	}
 
+	smeltCmd := &cobra.Command{
+		Use:   "smelt [file-name]",
+		Short: "Store all secrets from specified env file in the macOS Keychain, under the given prefix (if provided).",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := setupDefaultPaths(); err != nil {
+				return err
+			}
+
+			if len(args) != 1 {
+				return fmt.Errorf("file-name argument is required")
+			}
+
+			fileName := args[0]
+			prefix, _ := cmd.Flags().GetString("prefix")
+			if len(prefix) == 0 {
+				currentDir, err := os.Getwd()
+				if err != nil {
+					return fmt.Errorf("failed to get current directory: %v", err)
+				}
+				prefix = filepath.Dir(currentDir)
+			}
+
+			// Open and parse the env file
+			file, err := os.Open(fileName)
+			if err != nil {
+				return fmt.Errorf("failed to open env file: %v", err)
+			}
+			defer file.Close()
+
+			envVars := make(map[string]string)
+			scanner := bufio.NewScanner(file)
+			for scanner.Scan() {
+				line := strings.TrimSpace(scanner.Text())
+				if line == "" || strings.HasPrefix(line, "#") {
+					continue
+				}
+
+				parts := strings.SplitN(line, "=", 2)
+				if len(parts) != 2 {
+					return fmt.Errorf("invalid line in env file: %s", line)
+				}
+
+				key := strings.TrimSpace(parts[0])
+				value := strings.TrimSpace(parts[1])
+				envVars[key] = value
+			}
+
+			if err := scanner.Err(); err != nil {
+				return fmt.Errorf("failed to read env file: %v", err)
+			}
+
+			wd, err := os.Getwd()
+			var fig *config.ImbuedConfig
+			if err != nil {
+				return fmt.Errorf("failed to get current directory: %v", err)
+			} else if configPath, err = config.FindConfig(wd, 1); err != nil {
+				return fmt.Errorf("failed to find config file: %v", err)
+			} else if fig, err = config.LoadConfig(configPath); err != nil {
+				return fmt.Errorf("failed to load config file: %v", err)
+			}
+
+			clientCmd := Command{
+				Action:      "store_secrets",
+				Environment: envVars,
+				ProcessID:   auth.GetParentProcessID(),
+				ConfigPath:  configPath,
+				BackendType: fig.BackendType,
+			}
+			clientCmd.Environment["prefix"] = prefix
+
+			resp, err := runClient(socketPath, clientCmd)
+			if err != nil {
+				return fmt.Errorf("failed to store secrets: %v", err)
+			} else if !resp.Success {
+				return fmt.Errorf("failed to store secrets: %s", resp.Error)
+			}
+
+			fmt.Println("Secrets stored successfully in the macOS Keychain")
+			return nil
+		},
+	}
+
+	smeltCmd.Flags().String("prefix", "", "Optional prefix to prepend to each key before storing in the keychain")
+
 	// Create client command
 	clientCmd := &cobra.Command{
 		Use:   "client",
@@ -983,6 +1123,7 @@ func main() {
 	clientCmd.AddCommand(injectEnvCmd)
 	clientCmd.AddCommand(cleanEnvCmd)
 	clientCmd.AddCommand(showConfigCmd)
+	clientCmd.AddCommand(smeltCmd)
 
 	// Create credentials command
 	credentialsCmd := &cobra.Command{

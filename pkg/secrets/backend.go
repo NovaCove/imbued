@@ -12,6 +12,8 @@ type Backend interface {
 	// GetSecret retrieves a secret by its key
 	GetSecret(key string) (string, error)
 
+	StoreSecrets(secrets map[string]string) error
+
 	// Close cleans up any resources used by the backend
 	Close() error
 }
@@ -34,6 +36,8 @@ const (
 
 	// GCPSecretManager represents GCP Secret Manager backend
 	GCPSecretManager BackendType = "gcp_secret_manager"
+
+	MacOSKeychainManager BackendType = "macos_keychain_manager"
 )
 
 // NewBackend creates a new secret backend based on the given type
@@ -49,6 +53,8 @@ func NewBackend(backendType string) (Backend, error) {
 		return &AWSSecretManagerBackend{}, nil
 	case GCPSecretManager:
 		return &GCPSecretManagerBackend{}, nil
+	case MacOSKeychainManager:
+		return &MacOSKeychainBackend{}, nil
 	default:
 		return nil, fmt.Errorf("unsupported backend type: %s", backendType)
 	}

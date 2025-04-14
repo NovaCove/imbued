@@ -44,6 +44,16 @@ func (b *GCPSecretManagerBackend) GetSecret(key string) (string, error) {
 	return fmt.Sprintf("gcp-secret-%s", key), nil
 }
 
+func (b *GCPSecretManagerBackend) StoreSecrets(secrets map[string]string) error {
+	if !b.initialized {
+		return fmt.Errorf("gcp_secret_manager backend not initialized")
+	}
+
+	// In a real implementation, this would use the GCP Secret Manager client to store the secrets
+	// For now, we'll just return nil
+	return nil
+}
+
 // Close cleans up any resources used by the backend
 func (b *GCPSecretManagerBackend) Close() error {
 	// In a real implementation, this would close the GCP Secret Manager client

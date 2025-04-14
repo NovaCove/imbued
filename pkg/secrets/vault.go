@@ -44,6 +44,16 @@ func (b *VaultBackend) GetSecret(key string) (string, error) {
 	return fmt.Sprintf("vault-secret-%s", key), nil
 }
 
+func (b *VaultBackend) StoreSecrets(secrets map[string]string) error {
+	if !b.initialized {
+		return fmt.Errorf("vault backend not initialized")
+	}
+
+	// In a real implementation, this would use the Vault client to store the secrets
+	// For now, we'll just return nil
+	return nil
+}
+
 // Close cleans up any resources used by the backend
 func (b *VaultBackend) Close() error {
 	// In a real implementation, this would close the Vault client
