@@ -18,14 +18,26 @@ Imbued can run in two modes:
   - GCP Secret Manager
 - Authenticates users before allowing access to secrets
 - Tracks all access and authentication requests
-- Supports both Bash and Fish shells
+- Supports Bash, Zsh, and Fish shells
 
 ## Installation
 
-### Prerequisites
+### Using Homebrew (macOS)
+
+```bash
+# Add the tap
+brew tap novacove/in5
+
+# Install imbued
+brew install imbued
+```
+
+After installation, follow the caveats instructions to set up shell integration.
+
+### Prerequisites for manual installation
 
 - Go 1.16 or later
-- Bash or Fish shell
+- Bash, Zsh, or Fish shell
 
 ### Building from source
 
@@ -68,6 +80,21 @@ export IMBUED_SOCKET=$HOME/.imbued/imbued.sock
 
 # Source the imbued script
 source /path/to/imbued/scripts/bash/imbued.sh
+```
+
+#### Zsh
+
+Add the following to your `.zshrc`:
+
+```zsh
+# Set the path to the imbued binary (optional if installed to /usr/local/bin)
+export IMBUED_BIN=/path/to/imbued
+
+# Set the socket path (optional)
+export IMBUED_SOCKET=$HOME/.imbued/imbued.sock
+
+# Source the imbued script
+source /path/to/imbued/scripts/zsh/imbued.zsh
 ```
 
 #### Fish
@@ -175,6 +202,35 @@ The server mode has several advantages:
 - The server can maintain authentication state across multiple shells
 - The server can cache secrets, reducing the need to retrieve them from the backend
 - The server can handle authentication and secret retrieval in a centralized way
+
+## Contributing
+
+### Creating and Publishing the Homebrew Tap
+
+Imbued includes support for creating a Homebrew tap, which allows users to install it using Homebrew on macOS. The tap is designed as a monorepo for NovaCove tools, named "in5".
+
+To create and publish the Homebrew tap:
+
+1. Make sure you have a GitHub account and have created a repository named `homebrew-in5` under your account or organization.
+
+2. Run the following command to create the Homebrew tap structure:
+
+```bash
+make homebrew-tap
+```
+
+3. Follow the instructions displayed by the script to publish the tap to GitHub.
+
+4. Once published, users can install Imbued using:
+
+```bash
+brew tap novacove/in5
+brew install imbued
+```
+
+5. When releasing a new version of Imbued, update the version in the formula file (`Formula/imbued.rb`) and republish the tap.
+
+6. To add other NovaCove tools to the same tap, create additional formula files in the `Formula` directory of the tap repository.
 
 ## License
 

@@ -23,7 +23,7 @@ INSTALL_BIN=$(PREFIX)/bin
 INSTALL_SCRIPTS=$(PREFIX)/share/imbued/scripts
 LAUNCHD_DIR=$(HOME)/Library/LaunchAgents
 
-.PHONY: all build clean test deps install uninstall install-server uninstall-server
+.PHONY: all build clean test deps install uninstall install-server uninstall-server homebrew-tap
 
 all: deps build
 
@@ -95,3 +95,12 @@ uninstall-server:
 	launchctl unload $(LAUNCHD_DIR)/com.novacove.imbued.plist
 	rm -f $(LAUNCHD_DIR)/com.novacove.imbued.plist
 	@echo "Uninstalled imbued server from launchd"
+
+# Create Homebrew tap repository structure
+homebrew-tap:
+	@echo "Creating Homebrew tap repository structure..."
+	@mkdir -p Formula
+	@chmod +x scripts/homebrew/setup-tap.sh
+	@./scripts/homebrew/setup-tap.sh
+	@echo "Homebrew tap repository structure created."
+	@echo "Follow the instructions above to publish the tap to GitHub."
