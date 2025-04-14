@@ -143,8 +143,25 @@ func (b *OnePassBackend) StoreSecrets(secrets map[string]string) error {
 		return fmt.Errorf("onepass backend not initialized")
 	}
 
-	// In a real implementation, this would use the 1Password CLI to store secrets
-	// For now, we'll just return a placeholder
+	for key, value := range secrets {
+		// Check if the secret already exists
+		_, err := b.GetSecret(key)
+		if err == nil {
+			return fmt.Errorf("secret with key %s already exists", key)
+		}
+
+		// Store the secret in 1Password
+		cmd := exec.Command("op", "item", "create", "--vault", b.vaultID, "--category", "password", "--title", key, fmt.Sprintf("password=%s", value))
+		cmd.Env = append(os.Environ(), fmt.Sprintf("OP_SERVICE_ACCOUNT_TOKEN=%s", b.accountToken))
+
+		var stderr bytes.Buffer
+		cmd.Stderr = &stderr
+
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("failed to store secret in 1Password: %w, stderr: %s", err, stderr.String())
+		}
+	}
+
 	return fmt.Errorf("storing secrets in 1Password is not implemented")
 }
 
