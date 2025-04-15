@@ -156,7 +156,7 @@ imbued client clean-env
 
 ## How it works
 
-### Direct mode
+### Client
 
 1. When you enter a directory, the shell integration script checks for an `.imbued` configuration file in the current directory or parent directories (up to a configurable number of levels).
 2. If an `.imbued` file is found, the script checks if the current process has been authenticated to retrieve secrets.
