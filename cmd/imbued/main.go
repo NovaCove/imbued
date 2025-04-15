@@ -152,9 +152,49 @@ func handleConnection(conn net.Conn, tracker tracking.Tracker, authenticator aut
 		handleFindConfig(conn, cmd)
 	case "store_secrets":
 		handleStoreSecrets(conn, cmd, tracker, authenticator)
+	case "set_secret":
+		handleSetSecret(conn, cmd, authenticator)
 	default:
 		sendResponse(conn, Response{Success: false, Error: fmt.Sprintf("Unknown action: %s", cmd.Action)})
 	}
+}
+
+func handleSetSecret(conn net.Conn, cmd Command, authenticator auth.Authenticator) {
+	// Load config
+	cfg, err := config.LoadConfig(cmd.ConfigPath)
+	if err != nil {
+		sendResponse(conn, Response{Success: false, Error: fmt.Sprintf("Failed to load config: %v", err)})
+		return
+	}
+
+	// Check if authenticated
+	if !authenticator.IsAuthenticated(cmd.ProcessID) {
+		sendResponse(conn, Response{Success: false, Error: "Process is not authenticated"})
+		return
+	}
+
+	// Initialize secret backend
+	backend, err := secrets.NewBackend(cfg.BackendType)
+	if err != nil {
+		sendResponse(conn, Response{Success: false, Error: fmt.Sprintf("Failed to create secret backend: %v", err)})
+		return
+	}
+
+	if err := backend.Initialize(cfg.BackendConfig); err != nil {
+		sendResponse(conn, Response{Success: false, Error: fmt.Sprintf("Failed to initialize secret backend: %v", err)})
+		return
+	}
+	defer backend.Close()
+
+	// Store the secret
+	if err = backend.StoreSecrets(map[string]string{
+		cmd.SecretName: cmd.Environment["value"],
+	}); err != nil {
+		sendResponse(conn, Response{Success: false, Error: fmt.Sprintf("Failed to store secret: %v", err)})
+		return
+	}
+
+	sendResponse(conn, Response{Success: true})
 }
 
 // handleCheckAuth handles the check_auth command
@@ -1129,6 +1169,78 @@ func main() {
 		},
 	}
 
+	setSecretCommand := &cobra.Command{
+		Use:   "set-secret",
+		Short: "Add a new secret to a given backend",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := setupDefaultPaths(); err != nil {
+				return err
+			}
+
+			// Load config
+			wd, err := os.Getwd()
+			if err != nil {
+				return fmt.Errorf("failed to get current directory: %v", err)
+			}
+			clientConfigPath := filepath.Join(
+				wd,
+				".imbued",
+			)
+			cfg, err := config.LoadConfig(clientConfigPath)
+			if err != nil {
+				return fmt.Errorf("failed to load config: %v", err)
+			}
+
+			secretValue := cmd.Flag("value").Value.String()
+			if len(secretValue) == 0 {
+				// Prompt for secure input
+				secretValue, err = secrets.PromptForSecureInput("Enter secret value: ")
+				if err != nil {
+					return fmt.Errorf("failed to read secret value: %v", err)
+				}
+			}
+
+			secretName := cmd.Flag("name").Value.String()
+			if len(secretValue) == 0 {
+				return fmt.Errorf("secret value cannot be empty")
+			} else if len(secretName) == 0 {
+				return fmt.Errorf("secret name cannot be empty")
+			}
+
+			backendType := cmd.Flag("backend").Value.String()
+			if len(backendType) == 0 {
+				// Try to pull it from the local config, if there is one.
+				if len(cfg.BackendType) == 0 {
+					return fmt.Errorf("backend type cannot be empty")
+				}
+				backendType = cfg.BackendType
+			}
+
+			req := Command{
+				Action:      "set_secret",
+				ConfigPath:  clientConfigPath,
+				ProcessID:   auth.GetParentProcessID(),
+				SecretName:  secretName,
+				BackendType: backendType,
+				Environment: map[string]string{
+					"value": secretValue,
+				},
+			}
+
+			resp, err := runClient(socketPath, req)
+			if err != nil {
+				return fmt.Errorf("failed to set secret: %v", err)
+			} else if !resp.Success {
+				return fmt.Errorf("failed to set secret: %s", resp.Error)
+			}
+			fmt.Printf("Secret %s set successfully in the %s backend\n", secretName, backendType)
+			return nil
+		},
+	}
+	setSecretCommand.Flags().String("backend", "", "Backend to use for storing the secret (defaults to local config settings)")
+	setSecretCommand.Flags().String("name", "", "Name of the secret to set")
+	setSecretCommand.Flags().String("value", "", "Value of the secret to set")
+
 	smeltCmd.Flags().String("prefix", "", "Optional prefix to prepend to each key before storing in the keychain")
 
 	// Create client command
@@ -1147,6 +1259,7 @@ func main() {
 	clientCmd.AddCommand(cleanEnvCmd)
 	clientCmd.AddCommand(showConfigCmd)
 	clientCmd.AddCommand(smeltCmd)
+	clientCmd.AddCommand(setSecretCommand)
 
 	// Create credentials command
 	credentialsCmd := &cobra.Command{

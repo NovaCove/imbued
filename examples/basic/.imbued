@@ -1,0 +1,9 @@
+# Example .imbued configuration file
+
+# Type of secret backend to use
+backend_type = "macos_keychain_manager"
+
+# Secrets to retrieve
+# Format: secret_name = "environment_variable_name"
+[secrets]
+IMBUED_BASIC_EXAMPPLE_DATABASE_PASSWORD = "DB_PASSWORD"

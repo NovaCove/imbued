@@ -2,9 +2,21 @@
 
 Imbued is a toolset for managing secrets in a development environment. It automatically injects secrets into your environment variables when you enter a directory with an `.imbued` configuration file, and removes them when you exit the directory.
 
-Imbued can run in two modes:
-- **Direct mode**: The imbued binary is executed directly for each operation
-- **Server mode**: The imbued server runs as a background service, and the shell scripts communicate with it via a Unix socket
+## Quick start
+
+### Installation
+#### macOS
+
+```sh
+# Add the tap
+brew tap novacove/in5
+
+# Install imbued
+brew install imbued
+```
+
+### Quick usage
+See the [`examples/basic`](./examples/basic/README.md) for a quick setup example of how `imbued` works.
 
 ## Features
 
