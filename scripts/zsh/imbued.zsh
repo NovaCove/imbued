@@ -52,7 +52,7 @@ imbued_clean_env() {
         IMBUED_CURRENT_CONFIG=""
         
         # Notify the user
-        echo "Imbued: Cleaned environment variables"
+        # echo "Imbued: Cleaned environment variables"
     fi
 }
 
@@ -62,9 +62,9 @@ imbued_set_env() {
     
     # Check if we need to authenticate
     if ! "$IMBUED_BIN" client check-auth --socket "$IMBUED_SOCKET" --config "$config_path" &> /dev/null; then
-        echo "Imbued: Authentication required"
+        # echo "Imbued: Authentication required"
         if ! "$IMBUED_BIN" client auth --socket "$IMBUED_SOCKET" --config "$config_path"; then
-            echo "Imbued: Authentication failed"
+            echo "imbued: Authentication failed"
             return 1
         fi
     fi
@@ -72,16 +72,11 @@ imbued_set_env() {
     # Get the list of environment variables to set
     local env_vars="$("$IMBUED_BIN" client inject-env --socket "$IMBUED_SOCKET" --config "$config_path")"
 
-    echo "Imbued: Setting environment variables from $config_path"
-    echo "$env_vars"
-    
-    # Debug: Print raw environment variables
-    echo "Imbued: Raw environment variables:"
-    echo "$env_vars"
+    # echo "Imbued: Setting environment variables from $config_path"
+    # echo "$env_vars
 
     # Set each environment variable
     while IFS= read -r line; do
-        echo "Imbued: Processing line: $line"
         # Trim leading and trailing whitespace from the line
         line="${line## }"
         line="${line%% }"
@@ -91,10 +86,8 @@ imbued_set_env() {
             # Remove surrounding quotes from env_value if present
             env_value="${env_value%\"}"
             env_value="${env_value#\"}"
-            echo "Imbued: Setting $env_name to $env_value"
             export "$env_name"="$env_value"
         else
-            echo "Imbued: Skipping invalid line: $line"
         fi
     done <<< "$env_vars"
     
@@ -102,7 +95,7 @@ imbued_set_env() {
     IMBUED_CURRENT_CONFIG="$config_path"
     
     # Notify the user
-    echo "Imbued: Set environment variables"
+    # echo "Imbued: Set environment variables"
 }
 
 # Function to check for .imbued file and set environment variables
@@ -112,23 +105,23 @@ imbued_check() {
     
     # If no .imbued file found, clean environment variables
     if [[ -z "$config_path" ]]; then
-        echo "Imbued: No .imbued file found"
+        # echo "Imbued: No .imbued file found"
         imbued_clean_env
         return
     fi
     
     # If the .imbued file is the same as the current one, do nothing
     if [[ "$config_path" == "$IMBUED_CURRENT_CONFIG" ]]; then
-        echo "Imbued: Already using the current .imbued file"
+        # echo "Imbued: Already using the current .imbued file"
         return
     fi
     
     # Clean environment variables from previous .imbued file
-    echo "Imbued: Switching to new .imbued file"
+    # echo "Imbued: Switching to new .imbued file"
     imbued_clean_env
     
     # Set environment variables from new .imbued file
-    echo "Imbued: Setting environment variables from $config_path"
+    # echo "Imbued: Setting environment variables from $config_path"
     imbued_set_env "$config_path"
 }
 
@@ -145,9 +138,9 @@ imbued_cd() {
 imbued_ensure_server() {
     # Check if the socket exists and is a socket
     if [[ ! -S "$IMBUED_SOCKET" ]]; then
-        echo "Imbued: Starting server..."
+        # echo "Imbued: Starting server..."
         # Start the server in the background
-        nohup "$IMBUED_BIN" server start --socket "$IMBUED_SOCKET" > /dev/null 2>&1 &
+        nohup "$IMBUED_BIN" server start --socket "$IMBUED_SOCKET" > "$HOME/.imbued/imbued.log" 2>&1 </dev/null &
         # Wait a moment for the server to start
         sleep 1
     fi

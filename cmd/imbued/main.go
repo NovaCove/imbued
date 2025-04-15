@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"log/slog"
 	"net"
 	"os"
 	"os/exec"
@@ -47,6 +48,26 @@ var (
 	authDuration time.Duration
 	socketPath   string
 )
+
+var (
+	lgr *slog.Logger
+)
+
+func getLogger() *slog.Logger {
+	if lgr == nil {
+		logFile, err := os.OpenFile(filepath.Join(
+			os.Getenv("HOME"),
+			".imbued",
+			"logs",
+			"info.log",
+		), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			log.Fatalf("failed to open log file: %v", err)
+		}
+		lgr = slog.New(slog.NewJSONHandler(logFile, nil))
+	}
+	return lgr
+}
 
 // getDefaultSocketPath returns the default path for the Unix socket
 func getDefaultSocketPath() (string, error) {
@@ -620,11 +641,13 @@ func main() {
 				return fmt.Errorf("failed to check auth: %s", resp.Error)
 			}
 
+			lgr := getLogger()
+
 			isAuthenticated := resp.Data["authenticated"] == "true"
 			if isAuthenticated {
-				fmt.Println("Process is authenticated")
+				lgr.Info("Process is authenticated")
 			} else {
-				fmt.Println("Process is not authenticated")
+				lgr.Error("Process is not authenticated")
 				os.Exit(1)
 			}
 
@@ -641,8 +664,9 @@ func main() {
 				return err
 			}
 
+			lgr := getLogger()
 			processID := auth.GetParentProcessID()
-			fmt.Printf("Authenticating process ID: %s\n", processID)
+			lgr.Info("Authenticating process ID: %s\n", processID)
 			currentDir, err := os.Getwd()
 			if err != nil {
 				return fmt.Errorf("failed to get current directory: %v", err)
@@ -687,8 +711,7 @@ func main() {
 			if !resp.Success {
 				return fmt.Errorf("authentication failed: %s", resp.Error)
 			}
-
-			fmt.Println(resp.Output)
+			lgr.Info("Authentication successful")
 			return nil
 		},
 	}
@@ -1013,10 +1036,10 @@ func main() {
 
 			// Print secrets
 			fmt.Println("Secrets:")
-			for key, value := range resp.Data {
+			for key := range resp.Data {
 				if strings.HasPrefix(key, "secret.") {
 					secretName := strings.TrimPrefix(key, "secret.")
-					fmt.Printf("  %s -> %s\n", secretName, value)
+					fmt.Printf("  %s\n", secretName)
 				}
 			}
 
