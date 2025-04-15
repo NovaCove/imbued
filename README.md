@@ -19,19 +19,18 @@ brew install imbued
 See the [`examples/basic`](./examples/basic/README.md) for a quick setup example of how `imbued` works.
 
 ## Features
-
 - Automatically injects secrets into environment variables when entering a directory with an `.imbued` configuration file
 - Automatically removes environment variables when exiting the directory
-- Supports multiple secret backends:
-  - MacOS keychain
-  - 1Password (see [1Password Backend Documentation](pkg/secrets/onepass_README.md))
-- Plans to add support for:
-  - AWS Secret Manager
-  - GCP Secret Manager
-  - HashiCorp Vault
 - Authenticates users before allowing access to secrets
 - Tracks all access and authentication requests
 - Supports Bash, Zsh, and Fish shells
+- Supports multiple secret backends:
+  - MacOS keychain
+  - 1Password (see [1Password Backend Documentation](pkg/secrets/onepass_README.md))
+- Plan to add support for:
+  - AWS Secret Manager
+  - GCP Secret Manager
+  - HashiCorp Vault
 
 ## Installation
 
