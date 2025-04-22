@@ -96,11 +96,3 @@ uninstall-server:
 	rm -f $(LAUNCHD_DIR)/com.novacove.imbued.plist
 	@echo "Uninstalled imbued server from launchd"
 
-# Create Homebrew tap repository structure
-homebrew-tap:
-	@echo "Creating Homebrew tap repository structure..."
-	@mkdir -p Formula
-	@chmod +x scripts/homebrew/setup-tap.sh
-	@./scripts/homebrew/setup-tap.sh
-	@echo "Homebrew tap repository structure created."
-	@echo "Follow the instructions above to publish the tap to GitHub."
