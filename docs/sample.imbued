@@ -1,37 +1,7 @@
-# Sample .imbued configuration file
+# Simple sample .imbued configuration file
 
-# Number of child directories down that secrets are available for
-valid_depth = 2
+backend_type = "macos_keychain_manager"
 
-# Type of secret backend to use
-# Supported values: env_file, vault, onepass, aws_secret_manager, gcp_secret_manager
-backend_type = "env_file"
-
-# Backend-specific configuration
-[backend_config]
-# For env_file backend
-file_path = "/path/to/secrets.env"
-
-# For vault backend
-# address = "https://vault.example.com:8200"
-# token = "hvs.example"
-
-# For onepass backend (see pkg/secrets/onepass_README.md for more details)
-# No configuration needed here - credentials are stored in the macOS Keychain
-# Use: imbued credentials set-onepass --account-token "token" --vault-id "vault"
-
-# For aws_secret_manager backend
-# region = "us-west-2"
-# access_key = "AKIAEXAMPLE"
-# secret_key = "example-secret-key"
-# session_token = "example-session-token"  # Optional
-
-# For gcp_secret_manager backend
-# project_id = "example-project"
-# credentials = "/path/to/credentials.json"
-
-# Secrets to retrieve
-# Format: secret_name = "environment_variable_name"
 [secrets]
 DB_PASSWORD = "DATABASE_PASSWORD"
 API_KEY = "API_KEY"

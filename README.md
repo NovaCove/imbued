@@ -44,7 +44,7 @@ brew tap novacove/in5
 brew install imbued
 ```
 
-After installation, follow the caveats instructions to set up shell integration.
+After installation, follow the provided details for configuring your shell integration.
 
 ### Prerequisites for manual installation
 
@@ -81,13 +81,15 @@ The imbued server will now run automatically when you log in.
 
 #### Bash
 
+NOTE: none of the below is needed if you source the provided shell script and `homebrew`'s bin path is on your `$PATH`.
+
 Add the following to your `.bashrc` or `.bash_profile`:
 
 ```bash
-# Set the path to the imbued binary (optional if installed to /usr/local/bin)
+# Set the path to the imbued binary (OPTIONAL if installed to /usr/local/bin)
 export IMBUED_BIN=/path/to/imbued
 
-# Set the socket path (optional)
+# Set the socket path (OPTIONAL)
 export IMBUED_SOCKET=$HOME/.imbued/imbued.sock
 
 # Source the imbued script
@@ -131,9 +133,6 @@ source /path/to/imbued/scripts/fish/imbued.fish
 Create a file named `.imbued` in the root directory of your project. Here's an example:
 
 ```toml
-# Number of child directories down that secrets are available for
-valid_depth = 2
-
 # Type of secret backend to use
 backend_type = "macos_keychain_manager"
 
@@ -153,7 +152,7 @@ Imbued provides a command-line interface for managing secrets:
 ```bash
 # Server mode
 # Run in daemon mode as a server
-imbued --daemon --socket ~/.imbued/imbued.sock
+imbued server start
 
 # Client mode (communicates with the server)
 imbued client show-config
@@ -175,7 +174,7 @@ imbued client clean-env
 4. Once authenticated, the script retrieves the secrets from the configured backend and injects them into environment variables.
 5. When you exit the directory (or go beyond the valid depth), the script removes the environment variables.
 
-### Server mode
+### Server
 
 1. The imbued server runs as a background service, listening on a Unix socket.
 2. When you enter a directory, the shell integration script checks for an `.imbued` configuration file in the current directory or parent directories (up to a configurable number of levels).
@@ -184,39 +183,9 @@ imbued client clean-env
 5. Once authenticated, the script sends a request to the server to retrieve the secrets from the configured backend and injects them into environment variables.
 6. When you exit the directory (or go beyond the valid depth), the script sends a request to the server to remove the environment variables.
 
-The server mode has several advantages:
-- The server can maintain authentication state across multiple shells
-- The server can cache secrets, reducing the need to retrieve them from the backend
-- The server can handle authentication and secret retrieval in a centralized way
-
 ## Contributing
 
-### Creating and Publishing the Homebrew Tap
-
-Imbued includes support for creating a Homebrew tap, which allows users to install it using Homebrew on macOS. The tap is designed as a monorepo for NovaCove tools, named "in5".
-
-To create and publish the Homebrew tap:
-
-1. Make sure you have a GitHub account and have created a repository named `homebrew-in5` under your account or organization.
-
-2. Run the following command to create the Homebrew tap structure:
-
-```bash
-make homebrew-tap
-```
-
-3. Follow the instructions displayed by the script to publish the tap to GitHub.
-
-4. Once published, users can install Imbued using:
-
-```bash
-brew tap novacove/in5
-brew install imbued
-```
-
-5. When releasing a new version of Imbued, update the version in the formula file (`Formula/imbued.rb`) and republish the tap.
-
-6. To add other NovaCove tools to the same tap, create additional formula files in the `Formula` directory of the tap repository.
+Feel free to propose changes and fix issues that you encounter! Our guiding principle is to make this took as friendly and approachable as possible. Our focus is on general support and security, not niche use-cases. We're more than happy to always have a public discussion in a GitHub issue, though!
 
 ## License
 
