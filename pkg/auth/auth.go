@@ -37,7 +37,7 @@ func NewSimpleAuthenticator(authDuration time.Duration) *SimpleAuthenticator {
 
 func promptTouchID() bool {
 	// Using the security command-line tool to prompt for TouchID
-	cmd := exec.Command("security", "authorize", "-u", "-p", "TouchID authentication for secrets access")
+	cmd := exec.Command("security", "authorize", "-u", "-p", "imbued would like to use TouchID authentication to hydrate your environment")
 	err := cmd.Run()
 	return err == nil
 }
