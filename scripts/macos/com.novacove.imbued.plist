@@ -6,7 +6,7 @@
     <string>com.novacove.imbued</string>
     <key>ProgramArguments</key>
     <array>
-        <string>/usr/local/bin/imbued</string>
+        <string>/opt/homebrew/opt/imbued/bin/imbued</string>
         <string>--daemon</string>
         <string>--socket</string>
         <string>~/.imbued/imbued.sock</string>
