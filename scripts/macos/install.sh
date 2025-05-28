@@ -15,7 +15,7 @@ mkdir -p ~/.imbued/logs
 # Install the launchd plist file
 echo "Installing launchd plist file..."
 # Replace ~ with the actual home directory in the plist file
-sed "s|~|$HOME|g" "$SCRIPT_DIR/com.novacove.imbued.plist" > /tmp/com.novacove.imbued.plist
+# sed "s|~|$HOME|g" "$SCRIPT_DIR/com.novacove.imbued.plist" > /tmp/com.novacove.imbued.plist
 cp /tmp/com.novacove.imbued.plist ~/Library/LaunchAgents/com.novacove.imbued.plist
 rm /tmp/com.novacove.imbued.plist
 
