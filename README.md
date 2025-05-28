@@ -13,6 +13,8 @@ brew tap novacove/in5
 
 # Install imbued
 brew install imbued
+
+brew services start imbued
 ```
 
 ### Quick usage
@@ -42,6 +44,9 @@ brew tap novacove/in5
 
 # Install imbued
 brew install imbued
+
+# Starting the service
+brew services start imbued
 ```
 
 After installation, follow the provided details for configuring your shell integration.
@@ -61,22 +66,11 @@ go build -o bin/imbued cmd/imbued/main.go
 
 ### Installing as a launchd service (macOS)
 
-Imbued includes a script to install it as a launchd service on macOS:
+Imbued installs a launchctl service that can be started by `brew services`:
 
 ```bash
-cd imbued
-./scripts/macos/install.sh
+brew services start imbued
 ```
-
-This script will:
-1. Build the imbued binary
-2. Install it to `/usr/local/bin`
-3. Create the necessary directory structure in `~/.imbued`
-4. Install a launchd plist file to `~/Library/LaunchAgents`
-5. Load the launchd service
-
-The imbued server will now run automatically when you log in.
-
 ### Shell integration
 
 #### Bash
