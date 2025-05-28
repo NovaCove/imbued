@@ -8,10 +8,12 @@ set -e
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 PROJECT_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
 
-# Build the imbued binary
-echo "Building imbued..."
-cd "$PROJECT_DIR"
-go build -o bin/imbued ./cmd/imbued
+# Get the directory of the installed imbued binary
+IMBUED_BIN_DIR="$PROJECT_DIR/bin"
+if [ ! -d "$IMBUED_BIN_DIR" ]; then
+    echo "Error: The imbued binary directory does not exist: $IMBUED_BIN_DIR"
+    exit 1
+fi
 
 # Install the binary to /usr/local/bin
 echo "Installing imbued to /usr/local/bin..."
